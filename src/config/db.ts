@@ -9,6 +9,8 @@ const pool = new Pool({
 
 async function initDB() {
   try {
+    console.log("DB URL:", process.env.DATABASE_URL);
+    
     await pool.connect();
     console.log("✅ Connected to PostgreSQL");
 
@@ -33,8 +35,10 @@ async function initDB() {
     `);
 
     console.log("✅ Table ready");
+
   } catch (err) {
     console.error("❌ DB Error:", err);
+    process.exit(1); 
   }
 }
 

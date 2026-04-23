@@ -29,18 +29,12 @@ dotenv.config();
 
 const redis = createClient({
   url: process.env.REDIS_URL,
-  socket: {
-    tls: true, // ✅ Required for cloud Redis (Railway)
-    rejectUnauthorized: false,
-  },
 });
 
-// 🔥 Error handling
 redis.on("error", (err) => {
   console.error("❌ Redis Error:", err);
 });
 
-// 🔥 Connect once
 (async () => {
   try {
     await redis.connect();

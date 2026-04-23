@@ -1,9 +1,14 @@
 // src/controllers/url.controller.ts
 
 import { Request, Response } from "express";
-import { createShortUrl, getOriginalUrl } from "../services/url.service";
+import { logClick, createShortUrl } from "../services/url.service";
 import pool from "../config/db";
 import redisClient from "../config/redis";
+
+// ✅ Define params type
+interface UrlParams {
+  code: string;
+}
 
 export const shortenUrl = async (req: Request, res: Response) => {
   console.log("👉 Request received:", req.body);
@@ -11,37 +16,48 @@ export const shortenUrl = async (req: Request, res: Response) => {
   try {
     const { url } = req.body;
 
+    if (!url) {
+      return res.status(400).json({ error: "URL is required" });
+    }
+
     const result = await createShortUrl(url);
 
     console.log("✅ Short URL created:", result);
 
-    res.json(result);
+    return res.json(result);
   } catch (err: any) {
     console.error("🔥 FULL ERROR:", err);
-    res.status(500).json({
+    return res.status(500).json({
       error: "Server error",
-      message: err?.message || err
+      message: err?.message || err,
     });
   }
 };
 
-export const redirectUrl = async (req: Request , res: Response) => {
+export const redirectUrl = async (
+  req: Request<UrlParams>, // ✅ FIX HERE
+  res: Response
+) => {
   try {
-    const { code } = req.params;
+    const shortCode = req.params.code; // ✅ now fully typed
 
-    const cached = await redisClient.get(typeof code === "string" ? code : code[0]);
+    // 🔥 STEP 1: CHECK CACHE
+    const cached = await redisClient.get(shortCode);
 
     if (cached) {
-      console.log("⚡ Cache hit");
+      console.log("⚡ Cache HIT:", shortCode);
+
+      logClick(shortCode); // non-blocking
+
       return res.redirect(cached);
     }
 
-    console.log("❄️ Cache miss");
+    console.log("❄️ Cache MISS:", shortCode);
 
-    // 🔥 STEP 2: fetch from DB
+    // 🔥 STEP 2: FETCH FROM DB
     const result = await pool.query(
       "SELECT original_url FROM urls WHERE short_code = $1",
-      [code]
+      [shortCode]
     );
 
     if (result.rows.length === 0) {
@@ -50,13 +66,17 @@ export const redirectUrl = async (req: Request , res: Response) => {
 
     const originalUrl = result.rows[0].original_url;
 
-    await redisClient.set(typeof code === "string" ? code : code[0], originalUrl, {
+    // 🔥 STEP 3: STORE IN CACHE
+    await redisClient.set(shortCode, originalUrl, {
       EX: 3600,
     });
 
+    logClick(shortCode); // non-blocking
+
     return res.redirect(originalUrl);
+
   } catch (err) {
-    console.error(err);
+    console.error("🔥 Redirect Error:", err);
     return res.status(500).send("Server error");
   }
 };

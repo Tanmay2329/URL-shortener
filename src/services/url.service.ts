@@ -66,3 +66,14 @@ export const getOriginalUrl = async (shortCode: string) => {
 
   return originalUrl;
 };
+
+export const logClick = async (shortCode: string) => {
+  try {
+    await pool.query(
+      "INSERT INTO clicks (short_code) VALUES ($1)",
+      [shortCode]
+    );
+  } catch (err) {
+    console.error("Click log error:", err);
+  }
+};

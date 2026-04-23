@@ -73,13 +73,15 @@ export const logClick = async (
   userAgent: string
 ) => {
   try {
+    console.log(" Logging click for:", shortCode);
+
     await pool.query(
       `INSERT INTO clicks (short_code, ip_address, user_agent)
        VALUES ($1, $2, $3)`,
       [shortCode, ip, userAgent]
     );
 
-    console.log("📊 Click logged for:", shortCode);
+    console.log("📊 Click logged successfully:");
   } catch (err) {
     console.error("❌ Click log failed:", err);
   }

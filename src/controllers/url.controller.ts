@@ -44,12 +44,15 @@ export const redirectUrl = async (req: Request, res: Response) => {
       if (cached) {
         console.log("⚡ Cache hit");
 
+        console.log("🔥 Before logging click");
         // 🔥 LOG CLICK EVEN ON CACHE
         await logClick(
-          code!,
+          code,
           req.ip || "unknown",
           req.headers["user-agent"] || "unknown"
         );
+
+        console.log("🔥 After logging click");
 
         return res.redirect(cached);
       }
@@ -108,11 +111,33 @@ export const getAnalytics = async (req: Request, res: Response) => {
       [code]
     );
 
+    const trendResult = await pool.query(
+      `SELECT DATE(clicked_at) as date, COUNT(*) as clicks
+       FROM clicks
+       WHERE short_code = $1
+       GROUP BY date
+       ORDER BY date DESC`,
+      [code]
+    );
+
+    const ipResult = await pool.query(
+      `SELECT ip_address, COUNT(*) as count
+       FROM clicks
+       WHERE short_code = $1
+       GROUP BY ip_address
+       ORDER BY count DESC
+       LIMIT 5`,
+      [code]
+    );
+
     res.json({
       shortCode: code,
       totalClicks: totalResult.rows[0].count,
       recentClicks: recentResult.rows,
+      clickOverTime: trendResult.rows,
+      topIPs: ipResult.rows,
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Analytics error" });

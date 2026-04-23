@@ -10,7 +10,7 @@ import statsRoutes from "./routes/stats.routes";
 import rateLimit from "express-rate-limit";
 
 const app = express();
-
+app.set("trust proxy", 1);
 app.use(express.json());
 app.use("/", urlRoutes);
 app.get("/:code", redirectUrl);

@@ -22,9 +22,12 @@ export const createShortUrl = async (OriginalUrl: string) => {
     "INSERT INTO urls (original_url, short_code) VALUES ($1, $2) RETURNING *",
     [OriginalUrl, shortCode]
   );
-
+  
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  const shortUrl = `${baseUrl}/${shortCode}`;
+  console.log("BASE_URL:", process.env.BASE_URL);
   return {
-    shortUrl: `http://localhost:3000/${shortCode}`,
+    shortUrl,
     data: result.rows[0],
   };
 };

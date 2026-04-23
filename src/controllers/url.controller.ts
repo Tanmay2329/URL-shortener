@@ -70,7 +70,8 @@ export const redirectUrl = async (
     await redisClient.set(shortCode, originalUrl, {
       EX: 3600,
     });
-
+    
+    console.log(" Logging Click for:",  shortCode);
     logClick(shortCode); // non-blocking
 
     return res.redirect(originalUrl);

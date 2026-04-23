@@ -1,16 +1,18 @@
 import { Pool } from 'pg';
 
+const isProduction = process.env.DB_URL?.includes("railway");
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  connectionString: process.env.DB_URL,
+  ssl: isProduction 
+    ?{rejectUnauthorized: false,} 
+    : false,
 });
 
 async function initDB() {
   try {
     console.log("DB URL:", process.env.DATABASE_URL);
-    
+
     await pool.connect();
     console.log("✅ Connected to PostgreSQL");
 

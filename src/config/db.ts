@@ -1,11 +1,10 @@
 import { Pool } from 'pg';
 
 const pool = new Pool({
-  host: process.env.DB_HOST || "postgres",
-  port: 5432,
-  user: 'postgres',
-  password: 'password',
-  database: 'urlshortener',
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 async function initDB() {

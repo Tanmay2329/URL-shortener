@@ -18,10 +18,8 @@ app.use("/", urlRoutes);
 app.get("/:code", redirectUrl);
 app.use("/stats", statsRoutes);
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+app.listen(process.env.PORT || 3000, () => {
+  console.log(`Server running on ${process.env.PORT || 3000}`);
 });
 
 // simple test query

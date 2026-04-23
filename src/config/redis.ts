@@ -3,28 +3,30 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const redisClient = createClient({
-  url: process.env.REDIS_URL, 
-  socket: {
-    tls: true,
-    rejectUnauthorized: false,
-  },
-});
+let redisClient: any = null;
 
-redisClient.on("error", (err) => {
-  console.error("❌ Redis Error:", err);
-});
+if (process.env.REDIS_URL) {
+  redisClient = createClient({
+    url: process.env.REDIS_URL,
+  });
 
-redisClient.on("connect", () => {
-  console.log("✅ Redis connected");
-});
+  redisClient.on("error", (err: any) => {
+    console.error("❌ Redis Error:", err.message);
+  });
 
-(async () => {
-  try {
-    await redisClient.connect();
-  } catch (err) {
-    console.error("❌ Redis connection failed:", err);
-  }
-})();
+  redisClient.on("connect", () => {
+    console.log("✅ Redis connected");
+  });
+
+  (async () => {
+    try {
+      await redisClient.connect();
+    } catch (err) {
+      console.error("❌ Redis connection failed");
+    }
+  })();
+} else {
+  console.log("⚠️ Redis disabled (no REDIS_URL)");
+}
 
 export default redisClient;

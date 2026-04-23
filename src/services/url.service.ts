@@ -67,13 +67,20 @@ export const getOriginalUrl = async (shortCode: string) => {
   return originalUrl;
 };
 
-export const logClick = async (shortCode: string) => {
+export const logClick = async (
+  shortCode: string,
+  ip: string,
+  userAgent: string
+) => {
   try {
     await pool.query(
-      "INSERT INTO clicks (short_code) VALUES ($1)",
-      [shortCode]
+      `INSERT INTO clicks (short_code, ip_address, user_agent)
+       VALUES ($1, $2, $3)`,
+      [shortCode, ip, userAgent]
     );
+
+    console.log("📊 Click logged for:", shortCode);
   } catch (err) {
-    console.error("Click log error:", err);
+    console.error("❌ Click log failed:", err);
   }
 };

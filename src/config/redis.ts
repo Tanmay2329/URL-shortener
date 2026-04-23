@@ -27,21 +27,27 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const client = createClient({
+const redis = createClient({
   url: process.env.REDIS_URL,
+  socket: {
+    tls: true, // ✅ Required for cloud Redis (Railway)
+    rejectUnauthorized: false,
+  },
 });
 
-client.on("error", (err) => {
+// 🔥 Error handling
+redis.on("error", (err) => {
   console.error("❌ Redis Error:", err);
 });
 
+// 🔥 Connect once
 (async () => {
   try {
-    await client.connect();
-    console.log("Redis connected");
+    await redis.connect();
+    console.log("✅ Connected to Redis");
   } catch (err) {
-    console.error("Redis connection failed");
+    console.error("❌ Redis connection failed:", err);
   }
 })();
 
-export default client;
+export default redis;

@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import { logClick, createShortUrl } from "../services/url.service";
 import pool from "../config/db";
 import redisClient from "../config/redis";
+import validator from 'validator';
 
 // ✅ Define params type
 interface UrlParams {
@@ -20,11 +21,18 @@ export const shortenUrl = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "URL is required" });
     }
 
-    const result = await createShortUrl(url);
+    if (!validator.isURL(url, { require_protocol: true })) {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
 
-    console.log("✅ Short URL created:", result);
+    const shortCode = await createShortUrl(url);
 
-    return res.json(result);
+    console.log("✅ Short URL created:", shortCode);
+
+    return res.json({
+      shortUrl: `${process.env.BASE_URL}/${shortCode}`,
+    });
+
   } catch (err: any) {
     console.error("🔥 FULL ERROR:", err);
     return res.status(500).json({

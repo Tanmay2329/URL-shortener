@@ -12,30 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const redis_1 = require("redis");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-let redisClient = null;
-if (process.env.REDIS_URL) {
-    redisClient = (0, redis_1.createClient)({
-        url: process.env.REDIS_URL,
+const db_1 = __importDefault(require("./config/db"));
+const generateApiKey_1 = require("./utils/generateApiKey");
+function createKey() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const key = (0, generateApiKey_1.generateApiKey)();
+        yield db_1.default.query('INSERT INTO api_keys (api_key) VALUES ($1)', [key]);
+        console.log("✅ Your API Key:", key);
+        process.exit();
     });
-    redisClient.on("error", (err) => {
-        console.error("❌ Redis Error:", err.message);
-    });
-    redisClient.on("connect", () => {
-        console.log("✅ Redis connected");
-    });
-    (() => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            yield redisClient.connect();
-        }
-        catch (err) {
-            console.error("❌ Redis connection failed");
-        }
-    }))();
 }
-else {
-    console.log("⚠️ Redis disabled (no REDIS_URL)");
-}
-exports.default = redisClient;
+createKey();

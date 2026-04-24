@@ -25,13 +25,11 @@ export const shortenUrl = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid URL format' });
     }
 
-    const shortCode = await createShortUrl(url);
+    const { shortUrl } = await createShortUrl(req.body.url);
 
-    console.log("✅ Short URL created:", shortCode);
+    console.log("✅ Short URL created:", shortUrl);
 
-    return res.json({
-      shortUrl: `${process.env.BASE_URL}/${shortCode}`,
-    });
+    res.json({ shortUrl });
 
   } catch (err: any) {
     console.error("🔥 FULL ERROR:", err);
@@ -76,6 +74,10 @@ export const redirectUrl = async (req: Request, res: Response) => {
 
     if (result.rows.length === 0) {
       return res.status(404).send("URL not found");
+    }
+
+    if (!result.rows.length) {
+      throw new Error("Failed to create short URL");
     }
 
     const originalUrl = result.rows[0].original_url;

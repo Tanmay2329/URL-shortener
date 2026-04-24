@@ -13,45 +13,65 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.redirectUrl = exports.shortenUrl = void 0;
+exports.getAnalytics = exports.redirectUrl = exports.shortenUrl = void 0;
 const url_service_1 = require("../services/url.service");
 const db_1 = __importDefault(require("../config/db"));
 const redis_1 = __importDefault(require("../config/redis"));
+const validator_1 = __importDefault(require("validator"));
 const shortenUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("👉 Request received:", req.body);
     try {
         const { url } = req.body;
-        const result = yield (0, url_service_1.createShortUrl)(url);
-        console.log("✅ Short URL created:", result);
-        res.json(result);
+        if (!url) {
+            return res.status(400).json({ error: "URL is required" });
+        }
+        if (!validator_1.default.isURL(url, { require_protocol: true })) {
+            return res.status(400).json({ error: 'Invalid URL format' });
+        }
+        const { shortUrl } = yield (0, url_service_1.createShortUrl)(req.body.url);
+        console.log("✅ Short URL created:", shortUrl);
+        res.json({ shortUrl });
     }
     catch (err) {
         console.error("🔥 FULL ERROR:", err);
-        res.status(500).json({
+        return res.status(500).json({
             error: "Server error",
-            message: (err === null || err === void 0 ? void 0 : err.message) || err
+            message: (err === null || err === void 0 ? void 0 : err.message) || err,
         });
     }
 });
 exports.shortenUrl = shortenUrl;
 const redirectUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { code } = req.params;
-        const cached = yield redis_1.default.get(typeof code === "string" ? code : code[0]);
-        if (cached) {
-            console.log("⚡ Cache hit");
-            return res.redirect(cached);
+        const code = Array.isArray(req.params.code) ? req.params.code[0] : req.params.code;
+        // ✅ CACHE CHECK
+        if (redis_1.default) {
+            const cached = yield redis_1.default.get(code);
+            if (cached) {
+                console.log("⚡ Cache hit");
+                console.log("🔥 Before logging click");
+                // 🔥 LOG CLICK EVEN ON CACHE
+                yield (0, url_service_1.logClick)(code, req.ip || "unknown", req.headers["user-agent"] || "unknown");
+                console.log("🔥 After logging click");
+                return res.redirect(cached);
+            }
         }
         console.log("❄️ Cache miss");
-        // 🔥 STEP 2: fetch from DB
+        // ✅ FETCH FROM DB
         const result = yield db_1.default.query("SELECT original_url FROM urls WHERE short_code = $1", [code]);
         if (result.rows.length === 0) {
             return res.status(404).send("URL not found");
         }
+        if (!result.rows.length) {
+            throw new Error("Failed to create short URL");
+        }
         const originalUrl = result.rows[0].original_url;
-        yield redis_1.default.set(typeof code === "string" ? code : code[0], originalUrl, {
-            EX: 3600,
-        });
+        // ✅ STORE IN CACHE
+        if (redis_1.default) {
+            yield redis_1.default.set(code, originalUrl, { EX: 3600 });
+        }
+        // 🔥 LOG CLICK
+        yield (0, url_service_1.logClick)(code, req.ip || "unknown", req.headers["user-agent"] || "unknown");
         return res.redirect(originalUrl);
     }
     catch (err) {
@@ -60,3 +80,39 @@ const redirectUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.redirectUrl = redirectUrl;
+const getAnalytics = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { code } = req.params;
+        // 🔥 Total clicks
+        const totalResult = yield db_1.default.query("SELECT COUNT(*) FROM clicks WHERE short_code = $1", [code]);
+        // 🔥 Recent clicks
+        const recentResult = yield db_1.default.query(`SELECT ip_address, user_agent, clicked_at
+       FROM clicks
+       WHERE short_code = $1
+       ORDER BY clicked_at DESC
+       LIMIT 10`, [code]);
+        const trendResult = yield db_1.default.query(`SELECT DATE(clicked_at) as date, COUNT(*) as clicks
+       FROM clicks
+       WHERE short_code = $1
+       GROUP BY date
+       ORDER BY date DESC`, [code]);
+        const ipResult = yield db_1.default.query(`SELECT ip_address, COUNT(*) as count
+       FROM clicks
+       WHERE short_code = $1
+       GROUP BY ip_address
+       ORDER BY count DESC
+       LIMIT 5`, [code]);
+        res.json({
+            shortCode: code,
+            totalClicks: totalResult.rows[0].count,
+            recentClicks: recentResult.rows,
+            clickOverTime: trendResult.rows,
+            topIPs: ipResult.rows,
+        });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Analytics error" });
+    }
+});
+exports.getAnalytics = getAnalytics;

@@ -1,4 +1,6 @@
 import express from "express";
+import { validateApiKey } from "../middleware/apiKey.middleware";
+
 import {
   shortenUrl,
   redirectUrl,
@@ -7,7 +9,7 @@ import {
 
 const router = express.Router();
 
-router.post("/shorten", shortenUrl);
+router.post("/shorten", validateApiKey, shortenUrl);
 
 // 🔥 MUST come BEFORE /:code
 router.get("/analytics/:code", getAnalytics);

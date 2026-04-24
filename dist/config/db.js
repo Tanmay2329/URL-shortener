@@ -8,13 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 const pg_1 = require("pg");
+const isProduction = (_a = process.env.DB_URL) === null || _a === void 0 ? void 0 : _a.includes("railway");
 const pool = new pg_1.Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false,
-    },
+    connectionString: process.env.DB_URL,
+    ssl: isProduction
+        ? { rejectUnauthorized: false, }
+        : false,
 });
 function initDB() {
     return __awaiter(this, void 0, void 0, function* () {

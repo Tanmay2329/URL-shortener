@@ -1,30 +1,55 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Sparkles, 
-  Link as LinkIcon, 
-  Copy, 
-  CheckCircle, 
-  Rocket, 
-  Zap, 
-  Globe, 
-  ShieldCheck 
+import {
+  Sparkles,
+  Link as LinkIcon,
+  Copy,
+  CheckCircle,
+  Rocket,
+  Zap,
+  Globe,
+  ShieldCheck
 } from "lucide-react";
+
+// ✅ Railway backend URL from .env
+const API_URL = import.meta.env.VITE_API_URL;
 
 const App: React.FC = () => {
   const [url, setUrl] = useState<string>("");
   const [shortUrl, setShortUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
+  // ✅ Real API call to Railway backend
   const handleShorten = async () => {
     if (!url) return;
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setShortUrl(`https://url-shortener-production-fb16.up.railway.app/${Math.random().toString(36).substring(7)}`);
+    setShortUrl("");
+    setError("");
+
+    try {
+      const response = await fetch(`${API_URL}/shorten`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // ✅ Shows your backend's exact error message (e.g. "Invalid URL format")
+        throw new Error(data.error || "Failed to shorten URL");
+      }
+
+      setShortUrl(data.shortUrl); // ✅ matches res.json({ shortUrl }) in your controller
+
+    } catch (err) {
+      console.error("API Error:", err);
+      setError(err.message || "Something went wrong. Try again.");
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   const copyToClipboard = () => {
@@ -34,14 +59,12 @@ const App: React.FC = () => {
   };
 
   return (
-    // Main Container: Fixed full height and width with a dark mesh gradient
     <div className="relative min-h-screen w-full flex items-center justify-center bg-[#030014] overflow-hidden">
-      
+
       {/* Background Aesthetic Elements */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-blue-600/20 rounded-full blur-[120px]" />
-        {/* Subtle Grid Overlay */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 pointer-events-none"></div>
       </div>
 
@@ -52,14 +75,14 @@ const App: React.FC = () => {
       >
         {/* Branding Header */}
         <header className="text-center mb-10">
-          <motion.div 
+          <motion.div
             animate={{ y: [0, -12, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             className="inline-flex p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md mb-6 shadow-2xl"
           >
             <Rocket className="text-purple-400 w-12 h-12" />
           </motion.div>
-          
+
           <h1 className="text-6xl font-black tracking-tighter text-white mb-4 italic">
             TINY<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500 underline decoration-purple-500/30">LINK</span>
           </h1>
@@ -68,10 +91,10 @@ const App: React.FC = () => {
           </p>
         </header>
 
-        {/* The Action Card */}
+        {/* Action Card */}
         <div className="w-full backdrop-blur-3xl bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-10 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
           <div className="space-y-6">
-            
+
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400/80 ml-2">
                 Paste Destination URL
@@ -84,11 +107,26 @@ const App: React.FC = () => {
                   type="text"
                   placeholder="https://very-long-and-messy-link.com/..."
                   value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    setError(""); // ✅ Clear error when user starts typing again
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && handleShorten()} // ✅ Press Enter to shorten
                   className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-14 pr-4 outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/10 transition-all text-white placeholder:text-slate-600"
                 />
               </div>
             </div>
+
+            {/* ✅ Error message display */}
+            {error && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-red-400 text-sm font-medium ml-2"
+              >
+                ⚠️ {error}
+              </motion.p>
+            )}
 
             <motion.button
               whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(168, 85, 247, 0.4)" }}
@@ -96,9 +134,9 @@ const App: React.FC = () => {
               disabled={loading || !url}
               onClick={handleShorten}
               className={`w-full py-5 rounded-2xl font-black text-lg uppercase tracking-wider transition-all flex items-center justify-center gap-3 ${
-                loading 
-                ? "bg-slate-800 text-slate-500" 
-                : "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+                loading
+                  ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
               }`}
             >
               {loading ? (
@@ -116,15 +154,23 @@ const App: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                   className="pt-4"
                 >
                   <div className="p-5 rounded-[2rem] bg-gradient-to-b from-white/[0.07] to-transparent border border-white/10">
                     <div className="flex items-center justify-between">
                       <div className="overflow-hidden">
                         <p className="text-[10px] font-bold text-blue-400 uppercase mb-1">Link Ready 🚀</p>
-                        <p className="text-lg font-semibold truncate text-white">
+                        {/* ✅ Make short URL clickable */}
+                        
+                        <a
+                          href={shortUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-lg font-semibold truncate text-white hover:text-purple-400 transition-colors"
+                        >
                           {shortUrl}
-                        </p>
+                        </a>
                       </div>
                       <button
                         onClick={copyToClipboard}

@@ -11,8 +11,9 @@ import {
   ShieldCheck
 } from "lucide-react";
 
-// ✅ Railway backend URL from .env
+// ✅ Railway backend URL and API Key from .env
 const API_URL = import.meta.env.VITE_API_URL;
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 const App: React.FC = () => {
   const [url, setUrl] = useState<string>("");
@@ -21,7 +22,7 @@ const App: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
-  // ✅ Real API call to Railway backend
+  // ✅ Real API call to Railway backend with API key header
   const handleShorten = async () => {
     if (!url) return;
     setLoading(true);
@@ -31,14 +32,16 @@ const App: React.FC = () => {
     try {
       const response = await fetch(`${API_URL}/shorten`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": API_KEY, // ✅ required by your validateApiKey middleware
+        },
         body: JSON.stringify({ url }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // ✅ Shows your backend's exact error message (e.g. "Invalid URL format")
         throw new Error(data.error || "Failed to shorten URL");
       }
 
@@ -46,7 +49,12 @@ const App: React.FC = () => {
 
     } catch (err) {
       console.error("API Error:", err);
-      setError(err.message || "Something went wrong. Try again.");
+      // ✅ TypeScript-safe error handling — no "err: any" needed
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong. Try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -109,9 +117,9 @@ const App: React.FC = () => {
                   value={url}
                   onChange={(e) => {
                     setUrl(e.target.value);
-                    setError(""); // ✅ Clear error when user starts typing again
+                    setError("");
                   }}
-                  onKeyDown={(e) => e.key === "Enter" && handleShorten()} // ✅ Press Enter to shorten
+                  onKeyDown={(e) => e.key === "Enter" && handleShorten()}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-14 pr-4 outline-none focus:border-purple-500/50 focus:ring-4 focus:ring-purple-500/10 transition-all text-white placeholder:text-slate-600"
                 />
               </div>
@@ -161,8 +169,6 @@ const App: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="overflow-hidden">
                         <p className="text-[10px] font-bold text-blue-400 uppercase mb-1">Link Ready 🚀</p>
-                        {/* ✅ Make short URL clickable */}
-                        
                         <a
                           href={shortUrl}
                           target="_blank"

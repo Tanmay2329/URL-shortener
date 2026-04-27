@@ -1,51 +1,45 @@
-// src/app.ts
 import dotenv from "dotenv";
-import express from 'express';
-import cors from 'cors';
 dotenv.config();
 
+import express from 'express';
+import cors from 'cors';
 import urlRoutes from "./routes/url.routes";
-import pool  from './config/db';
-import { redirectUrl } from "./controllers/url.controller";
+import pool from './config/db';
 import statsRoutes from "./routes/stats.routes";
-import rateLimit from "express-rate-limit";
 import { rateLimiter } from './middleware/rateLimiter';
-
 
 const app = express();
 
+// ✅ CORS — add your frontend Railway URL here once deployed
 app.use(cors({
-  origin:[
+  origin: [
     'http://localhost:5173',
     'http://localhost:5174',
     'https://url-shortener-production-7137.up.railway.app',
+    // 'https://your-frontend-railway-url.up.railway.app' ← add after deploying frontend
   ],
-  methods: ['GET', 'POST' ],
+  methods: ['GET', 'POST'],
 }));
 
+// ✅ Single express.json()
 app.use(express.json());
 
-app.use(rateLimiter);
+// ✅ Trust proxy once
 app.set("trust proxy", 1);
-app.use(express.json());
+
+// ✅ Rate limiter once globally
+app.use(rateLimiter);
+
+// ✅ Routes in correct order
 app.use("/", urlRoutes);
-app.get("/:code", redirectUrl);
 app.use("/stats", statsRoutes);
-app.use('/shorten', rateLimiter);
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`Server running on ${process.env.PORT || 3000}`);
-});
-
-// simple test query
+// ✅ DB connection test
 (async () => {
   const res = await pool.query('SELECT NOW()');
-  console.log(res.rows);
+  console.log("✅ DB connected:", res.rows);
 })();
 
-const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000,
-  max: 2,
+app.listen(process.env.PORT || 3000, () => {
+  console.log(`Server running on port ${process.env.PORT || 3000}`);
 });
-
-app.use(limiter);

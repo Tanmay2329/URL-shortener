@@ -11,9 +11,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 
-// ✅ Railway backend URL and API Key from .env
-const API_URL = import.meta.env.VITE_API_URL;
-const API_KEY = import.meta.env.VITE_API_KEY;
+const API_URL = "https://url-shortener-production-fb16.up.railway.app/" ;
 
 const App: React.FC = () => {
   const [url, setUrl] = useState<string>("");
@@ -22,33 +20,36 @@ const App: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
-  // ✅ Real API call to Railway backend with API key header
+  
   const handleShorten = async () => {
     if (!url) return;
     setLoading(true);
     setShortUrl("");
     setError("");
-
+    console.log("API_URL:", API_URL);
     try {
-      const response = await fetch(`${API_URL}/shorten`, {
+      const response = await fetch(`${API_URL?.replace(/\/$/, "")}/shorten`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "x-api-key": API_KEY, // ✅ required by your validateApiKey middleware
+          "Content-Type": "application/json"
+          //✅ required by your validateApiKey middleware
         },
         body: JSON.stringify({ url }),
       });
 
-      const data = await response.json();
+      const text = await response.text(); // 👈 change this
+      console.log("RAW RESPONSE:", text);
+
+      const data = JSON.parse(text);
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to shorten URL");
+        throw new Error(data.error || "Error = error to shorten URL");
       }
 
       setShortUrl(data.shortUrl); // ✅ matches res.json({ shortUrl }) in your controller
 
     } catch (err) {
-      console.error("API Error:", err);
+      console.error("API Error xsh:", err);
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -72,7 +73,7 @@ const App: React.FC = () => {
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-blue-600/20 rounded-full blur-[120px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 pointer-events-none"></div>
+        
       </div>
 
       <motion.div

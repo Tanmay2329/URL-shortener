@@ -12,44 +12,39 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// src/app.ts
 const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-dotenv_1.default.config();
 const url_routes_1 = __importDefault(require("./routes/url.routes"));
 const db_1 = __importDefault(require("./config/db"));
-const url_controller_1 = require("./controllers/url.controller");
 const stats_routes_1 = __importDefault(require("./routes/stats.routes"));
-const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const rateLimiter_1 = require("./middleware/rateLimiter");
 const app = (0, express_1.default)();
+// ✅ CORS — add your frontend Railway URL here once deployed
 app.use((0, cors_1.default)({
     origin: [
         'http://localhost:5173',
         'http://localhost:5174',
         'https://url-shortener-production-7137.up.railway.app',
+        // 'https://your-frontend-railway-url.up.railway.app' ← add after deploying frontend
     ],
     methods: ['GET', 'POST'],
 }));
+// ✅ Single express.json()
 app.use(express_1.default.json());
-app.use(rateLimiter_1.rateLimiter);
+// ✅ Trust proxy once
 app.set("trust proxy", 1);
-app.use(express_1.default.json());
+// ✅ Rate limiter once globally
+app.use(rateLimiter_1.rateLimiter);
+// ✅ Routes in correct order
 app.use("/", url_routes_1.default);
-app.get("/:code", url_controller_1.redirectUrl);
 app.use("/stats", stats_routes_1.default);
-app.use('/shorten', rateLimiter_1.rateLimiter);
-app.listen(process.env.PORT || 3000, () => {
-    console.log(`Server running on ${process.env.PORT || 3000}`);
-});
-// simple test query
+// ✅ DB connection test
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const res = yield db_1.default.query('SELECT NOW()');
-    console.log(res.rows);
+    console.log("✅ DB connected:", res.rows);
 }))();
-const limiter = (0, express_rate_limit_1.default)({
-    windowMs: 1 * 60 * 1000,
-    max: 2,
+app.listen(process.env.PORT || 3000, () => {
+    console.log(`Server running on port ${process.env.PORT || 3000}`);
 });
-app.use(limiter);

@@ -6,8 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.rateLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 exports.rateLimiter = (0, express_rate_limit_1.default)({
-    windowMs: 1 * 60 * 1000, // 15 minutes
-    max: 2, // max 100 requests per IP
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // max 100 requests per IP
     standardHeaders: true,
     legacyHeaders: false,
     message: {

@@ -26,7 +26,7 @@ const createShortUrl = (OriginalUrl) => __awaiter(void 0, void 0, void 0, functi
     const shortCode = generateShortCode();
     const result = yield db_1.default.query("INSERT INTO urls (original_url, short_code) VALUES ($1, $2) RETURNING *", [OriginalUrl, shortCode]);
     const baseUrl = process.env.BASE_URL || "http://localhost:3000";
-    const shortUrl = '${baseUrl}/${shortCode}';
+    const shortUrl = `${baseUrl}/${shortCode}`;
     return {
         shortUrl,
         data: result.rows[0],

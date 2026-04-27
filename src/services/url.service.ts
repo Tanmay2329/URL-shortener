@@ -19,7 +19,7 @@ export const createShortUrl = async (OriginalUrl: string) => {
   );
 
   const baseUrl = process.env.BASE_URL || "http://localhost:3000";
-  const shortUrl = `${baseUrl}/${shortCode}`;
+  const shortUrl = '${baseUrl}/${shortCode}';
 
   return {
     shortUrl,

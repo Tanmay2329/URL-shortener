@@ -18,6 +18,7 @@ app.use(cors({
   origin:[
     'http://localhost:5173',
     'http://localhost:5174',
+    'https://url-shortener-production-7137.up.railway.app',
   ],
   methods: ['GET', 'POST' ],
 }));

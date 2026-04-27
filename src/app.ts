@@ -1,8 +1,9 @@
 // src/app.ts
 import dotenv from "dotenv";
+import express from 'express';
+import cors from 'cors';
 dotenv.config();
 
-import express from "express";
 import urlRoutes from "./routes/url.routes";
 import pool  from './config/db';
 import { redirectUrl } from "./controllers/url.controller";
@@ -12,6 +13,17 @@ import { rateLimiter } from './middleware/rateLimiter';
 
 
 const app = express();
+
+app.use(cors({
+  origin:[
+    'http://localhost:5173',
+    'http://localhost:5174',
+  ],
+  methods: ['GET', 'POST' ],
+}));
+
+app.use(express.json());
+
 app.use(rateLimiter);
 app.set("trust proxy", 1);
 app.use(express.json());

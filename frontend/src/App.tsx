@@ -49,7 +49,6 @@ const App: React.FC = () => {
 
     } catch (err) {
       console.error("API Error:", err);
-      // ✅ TypeScript-safe error handling — no "err: any" needed
       if (err instanceof Error) {
         setError(err.message);
       } else {

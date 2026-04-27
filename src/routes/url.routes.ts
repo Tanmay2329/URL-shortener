@@ -1,5 +1,4 @@
 import express from "express";
-import { validateApiKey } from "../middleware/apiKey.middleware";
 
 import {
   shortenUrl,
@@ -9,7 +8,7 @@ import {
 
 const router = express.Router();
 
-router.post("/shorten", validateApiKey, shortenUrl);
+router.post("/shorten", shortenUrl);
 
 // 🔥 MUST come BEFORE /:code
 router.get("/analytics/:code", getAnalytics);

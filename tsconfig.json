@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+      "target": "ES6",
+      "module": "commonjs",
+      "rootDir": "URL-Shortner/src",
+      "outDir": "dist",
+      "esModuleInterop": true,
+      "strict": true
+    },
+    "include": ["URL-Shortner/src"],
+    "exclude": ["node_modules", "frontend"]
+}

@@ -3,7 +3,6 @@
 import { Request, Response } from "express";
 import { logClick, createShortUrl } from "../services/url.service";
 import pool from "../config/db";
-import redisClient from "../config/redis";
 import validator from 'validator';
 
 // ✅ Define params type
@@ -42,31 +41,11 @@ export const shortenUrl = async (req: Request, res: Response) => {
 
 export const redirectUrl = async (req: Request, res: Response) => {
   try {
-    const code = Array.isArray(req.params.code) ? req.params.code[0] : req.params.code;
+    const code = Array.isArray(req.params.code)
+      ? req.params.code[0]
+      : req.params.code;
 
-    // ✅ CACHE CHECK
-    if (redisClient) {
-      const cached = await redisClient.get(code);
-      if (cached) {
-        console.log("⚡ Cache hit");
-
-        console.log("🔥 Before logging click");
-        // 🔥 LOG CLICK EVEN ON CACHE
-        await logClick(
-          code,
-          req.ip || "unknown",
-          req.headers["user-agent"] || "unknown"
-        );
-
-        console.log("🔥 After logging click");
-
-        return res.redirect(cached);
-      }
-    }
-
-    console.log("❄️ Cache miss");
-
-    // ✅ FETCH FROM DB
+    // 🔥 FETCH FROM DB ONLY
     const result = await pool.query(
       "SELECT original_url FROM urls WHERE short_code = $1",
       [code]
@@ -76,16 +55,7 @@ export const redirectUrl = async (req: Request, res: Response) => {
       return res.status(404).send("URL not found");
     }
 
-    if (!result.rows.length) {
-      throw new Error("Failed to create short URL");
-    }
-
     const originalUrl = result.rows[0].original_url;
-
-    // ✅ STORE IN CACHE
-    if (redisClient) {
-      await redisClient.set(code, originalUrl, { EX: 3600 });
-    }
 
     // 🔥 LOG CLICK
     await logClick(
@@ -97,7 +67,7 @@ export const redirectUrl = async (req: Request, res: Response) => {
     return res.redirect(originalUrl);
   } catch (err) {
     console.error(err);
-    return res.status(500).send("Server error");
+    return res.status(500);
   }
 };
 

@@ -39,7 +39,8 @@ function initDB() {
         id SERIAL PRIMARY KEY,
         short_code VARCHAR(10),
         clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        ip_address VARCHAR(45)
+        ip_address VARCHAR(45),
+        user_agent TEXT
       );
     `);
             console.log("✅ Table ready");

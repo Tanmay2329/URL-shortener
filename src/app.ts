@@ -10,6 +10,7 @@ import { rateLimiter } from './middleware/rateLimiter';
 
 const app = express();
 
+console.log("Running build version:", new Date().toISOString());
 // ✅ CORS — add your frontend Railway URL here once deployed
 app.use(cors({
   origin: [
@@ -26,10 +27,8 @@ app.use(express.json());
 
 // ✅ Trust proxy once
 app.set("trust proxy", 1);
-
 // ✅ Rate limiter once globally
 app.use(rateLimiter);
-
 // ✅ Routes in correct order
 app.use("/", urlRoutes);
 app.use("/stats", statsRoutes);

@@ -21,6 +21,7 @@ const db_1 = __importDefault(require("./config/db"));
 const stats_routes_1 = __importDefault(require("./routes/stats.routes"));
 const rateLimiter_1 = require("./middleware/rateLimiter");
 const app = (0, express_1.default)();
+console.log("Running build version:", new Date().toISOString());
 // ✅ CORS — add your frontend Railway URL here once deployed
 app.use((0, cors_1.default)({
     origin: [

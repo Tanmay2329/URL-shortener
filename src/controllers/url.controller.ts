@@ -55,14 +55,27 @@ export const redirectUrl = async (req: Request, res: Response) => {
       return res.status(404).send("URL not found");
     }
 
+    console.log("Headers:", {
+      forwarded: req.headers["x-forwarded-for"],
+      realIp: req.headers["x-real-ip"],
+      reqIp: req.ip,
+      socket: req.socket?.remoteAddress
+    });
+    
     const originalUrl = result.rows[0].original_url;
 
     // 🔥 LOG CLICK
-    await logClick(
-      code,
-      req.ip || "unknown",
-      req.headers["user-agent"] || "unknown"
-    );
+    const clientIp =
+    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+    req.headers["x-real-ip"] as string ||
+    req.socket?.remoteAddress ||
+    "unknown";
+  
+  await logClick(
+    code,
+    clientIp,
+    req.headers["user-agent"] || "unknown"
+  );
 
     return res.redirect(originalUrl);
   } catch (err) {

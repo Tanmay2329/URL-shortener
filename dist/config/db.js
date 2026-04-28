@@ -13,7 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const pg_1 = require("pg");
 const isProduction = (_a = process.env.DB_URL) === null || _a === void 0 ? void 0 : _a.includes("railway");
 const pool = new pg_1.Pool({
-    connectionString: process.env.DB_URL,
+    connectionString: process.env.DATABASE_URL || process.env.DB_URL,
     ssl: isProduction
         ? { rejectUnauthorized: false, }
         : false,
@@ -21,7 +21,7 @@ const pool = new pg_1.Pool({
 function initDB() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log("DB URL:", process.env.DATABASE_URL);
+            console.log("DB URL:", process.env.DATABASE_URL || process.env.DB_URL);
             yield pool.connect();
             console.log("✅ Connected to PostgreSQL");
             // 👉 CREATE TABLE HERE

@@ -41,6 +41,7 @@ const shortenUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.shortenUrl = shortenUrl;
 const redirectUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
     try {
         const code = Array.isArray(req.params.code)
             ? req.params.code[0]
@@ -50,9 +51,19 @@ const redirectUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (result.rows.length === 0) {
             return res.status(404).send("URL not found");
         }
+        console.log("Headers:", {
+            forwarded: req.headers["x-forwarded-for"],
+            realIp: req.headers["x-real-ip"],
+            reqIp: req.ip,
+            socket: (_a = req.socket) === null || _a === void 0 ? void 0 : _a.remoteAddress
+        });
         const originalUrl = result.rows[0].original_url;
         // 🔥 LOG CLICK
-        yield (0, url_service_1.logClick)(code, req.ip || "unknown", req.headers["user-agent"] || "unknown");
+        const clientIp = ((_c = (_b = req.headers["x-forwarded-for"]) === null || _b === void 0 ? void 0 : _b.split(",")[0]) === null || _c === void 0 ? void 0 : _c.trim()) ||
+            req.headers["x-real-ip"] ||
+            ((_d = req.socket) === null || _d === void 0 ? void 0 : _d.remoteAddress) ||
+            "unknown";
+        yield (0, url_service_1.logClick)(code, clientIp, req.headers["user-agent"] || "unknown");
         return res.redirect(originalUrl);
     }
     catch (err) {

@@ -92,10 +92,10 @@ const App: React.FC = () => {
           </motion.div>
 
           <h1 className="text-6xl font-black tracking-tighter text-white mb-4 italic">
-            TINY<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500 underline decoration-purple-500/30">LINK</span>
+            URL<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500 underline decoration-purple-500/30">Shortener</span>
           </h1>
           <p className="text-slate-400 text-lg font-medium max-w-sm mx-auto">
-            The intelligent way to manage and track your short links. ⚡
+            The intelligent way to create, manage and track your short links. ⚡
           </p>
         </header>
 

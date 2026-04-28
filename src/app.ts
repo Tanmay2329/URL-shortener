@@ -17,7 +17,7 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:5174',
     'https://url-shortener-production-7137.up.railway.app',
-    // 'https://your-frontend-railway-url.up.railway.app' ← add after deploying frontend
+    'https://url-shorten-production-ddfa.up.railway.app',
   ],
   methods: ['GET', 'POST'],
 }));
